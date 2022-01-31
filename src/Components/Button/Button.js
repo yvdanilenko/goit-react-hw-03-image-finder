@@ -3,7 +3,8 @@ import { Component } from "react";
 import { LoadingButton } from "./Button.styled";
 
 class Button extends Component {
-  handleClick = () => {
+  handleClick = (event) => {
+    event.preventDefault();
     this.props.onClick();
   };
 

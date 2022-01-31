@@ -10,7 +10,7 @@ export default class ImageGallery extends Component {
     result: null,
     error: null,
     status: "idle",
-    sowModal: false,
+    showModal: false,
     modalImg: null,
     page: 1,
   };
@@ -48,8 +48,9 @@ export default class ImageGallery extends Component {
   };
 
   loadMorePhotos = () => {
-    this.setState(({ page }) => ({
+    this.setState(({ page, status }) => ({
       page: page + 1,
+      status: "resolved",
     }));
   };
 

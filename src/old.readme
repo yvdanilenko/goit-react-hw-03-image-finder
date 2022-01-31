@@ -1,0 +1,63 @@
+//ImageGallery
+
+class ImageGallery extends Component {
+  state = {
+    result: null,
+    loading: false,
+    erorr: null,
+    status: 'idle',
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const prevName = prevProps.searchWord
+    const nextName = this.props.searchWord
+
+    if (prevName !== nextName) {
+      console.log('изменилось имя покемона')
+      //   сonsole.log('prevProps', prevProps.searchWord)
+      //   сonsole.log('this.props.searchWord', this.props.searchWord)
+
+      this.setState({ loading: true, result: null })
+
+      fetch(`https://pokeapi.co/api/v2/pokemon/${nextName}`)
+        .then((response) => {
+          if (response.ok) {
+            return response.json()
+          }
+          return Promise.reject(new Error(`нет такого запроса{}`))
+        })
+        .then((result) => this.setState({ result }))
+        .catch((erorr) => this.setState({ erorr }))
+        .finally(() => this.setState({ loading: false }))
+    }
+  }
+
+  render() {
+    const { loading, result, error } = this.state
+    const { searchWord } = this.props
+
+    return (
+      <div>
+        {error && (
+          <div>
+            {' '}
+            <h1>{error.message}</h1>
+          </div>
+        )}
+        {loading && <div>Загружаем....</div>}
+        {!searchWord && (
+          <div>
+            <p>Введите название картинки</p>
+          </div>
+        )}
+        {result && (
+          <div>
+            <p>{result.name}</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+}
+
+export default ImageGallery
