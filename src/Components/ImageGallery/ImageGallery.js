@@ -15,12 +15,13 @@ export default class ImageGallery extends Component {
     page: 1,
   };
 
-  fetchAPI = (keyWord) => {
+  fetchAPI = (keyWord, page) => {
     const myKey = "25467433-d0871e395a60e3278e04a539e";
-    this.setState({ results: null, error: null, status: "pending" });
+    this.setState({ error: null, status: "pending" });
+    const { results } = this.state;
 
     fetch(
-      `https://pixabay.com/api/?q=${keyWord}&page=${this.state.page}&key=${myKey}&image_type=photo&orientation=horizontal&per_page=12`
+      `https://pixabay.com/api/?q=${keyWord}&page=${page}&key=${myKey}&image_type=photo&orientation=horizontal&per_page=12`
     )
       .then((response) => {
         return response.json();
@@ -32,7 +33,10 @@ export default class ImageGallery extends Component {
             error: ` ${keyWord} - запрос не найден`,
           });
         }
-        return this.setState({ results: arr.hits, status: "resolved" });
+        return this.setState({
+          results: page === 1 ? arr.hits : [...results, ...arr.hits],
+          status: "resolved",
+        });
       })
       .catch((error) => this.setState({ status: "rejected" }));
   };
@@ -50,24 +54,18 @@ export default class ImageGallery extends Component {
   loadMorePhotos = () => {
     this.setState(({ page, status }) => ({
       page: page + 1,
-      status: "resolved",
     }));
   };
 
   componentDidUpdate(prevProps, prevState) {
     const prevKeyWord = prevProps.searchWord;
     const keyWord = this.props.searchWord;
+    const { page } = this.state;
 
-    if (prevKeyWord !== keyWord) {
-      this.setState({ page: 1 });
-      return this.fetchAPI(keyWord);
-    }
-
-    if (prevState.page === this.state.page) {
-      return;
-    } else {
-      this.fetchAPI(keyWord);
-      window.scrollTo(0, 0);
+    if (prevKeyWord !== keyWord || prevState.page !== page) {
+      return prevKeyWord !== keyWord
+        ? this.fetchAPI(keyWord, 1)
+        : this.fetchAPI(keyWord, page);
     }
   }
 
@@ -81,34 +79,31 @@ export default class ImageGallery extends Component {
     if (status === "pending") {
       return <Loader></Loader>;
     }
-
-    if (status === "resolved") {
-      return (
-        <>
-          <GalleryList>
-            {results.map((result) => (
-              <ImageGalleryItem
-                key={result.id}
-                result={result}
-                onClick={this.toggleModal}
-                modalPhoto={this.getModalPhoto}
-              ></ImageGalleryItem>
-            ))}
-          </GalleryList>
-          <Container>
-            <Button onClick={this.loadMorePhotos}></Button>
-          </Container>
-          {this.state.showModal && (
-            <Modal onClick={this.toggleModal} modalImg={modalImg}>
-              <button type="button" onClick={this.toggleModal}></button>
-            </Modal>
-          )}
-        </>
-      );
-    }
-
     if (status === "rejected") {
       return <h2>{error}</h2>;
     }
+
+    return (
+      <>
+        <GalleryList>
+          {results?.map((result) => (
+            <ImageGalleryItem
+              key={result.id}
+              result={result}
+              onClick={this.toggleModal}
+              modalPhoto={this.getModalPhoto}
+            ></ImageGalleryItem>
+          ))}
+        </GalleryList>
+        <Container>
+          <Button onClick={this.loadMorePhotos}></Button>
+        </Container>
+        {this.state.showModal && (
+          <Modal onClick={this.toggleModal} modalImg={modalImg}>
+            <button type="button" onClick={this.toggleModal}></button>
+          </Modal>
+        )}
+      </>
+    );
   }
 }
